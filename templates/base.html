@@ -37,6 +37,19 @@
                 radial-gradient(circle at top left, rgba(31, 111, 84, 0.08), transparent 28%),
                 radial-gradient(circle at bottom right, rgba(15, 118, 110, 0.08), transparent 26%),
                 linear-gradient(180deg, #fcfaf7 0%, var(--bg) 100%);
+            opacity: 0;
+            transform: translateY(10px);
+            transition: opacity 220ms ease, transform 220ms ease;
+        }
+
+        body.page-ready {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        body.page-leaving {
+            opacity: 0;
+            transform: translateY(10px);
         }
 
         a {
@@ -367,5 +380,74 @@
         </div>
     </footer>
 </div>
+
+<script>
+    const body = document.body;
+    const transitionDuration = 220;
+
+    window.addEventListener('DOMContentLoaded', () => {
+        requestAnimationFrame(() => {
+            body.classList.add('page-ready');
+        });
+    });
+
+    window.addEventListener('pageshow', () => {
+        body.classList.remove('page-leaving');
+        body.classList.add('page-ready');
+    });
+
+    function isSameOriginNavigation(url) {
+        return url.origin === window.location.origin;
+    }
+
+    function startExitTransition(onDone) {
+        body.classList.remove('page-ready');
+        body.classList.add('page-leaving');
+        window.setTimeout(onDone, transitionDuration);
+    }
+
+    document.addEventListener('click', (event) => {
+        const link = event.target.closest('a[href]');
+        if (!link) {
+            return;
+        }
+
+        if (link.target === '_blank' || link.hasAttribute('download')) {
+            return;
+        }
+
+        const url = new URL(link.href, window.location.href);
+        if (!isSameOriginNavigation(url)) {
+            return;
+        }
+
+        const samePath = url.pathname === window.location.pathname && url.search === window.location.search && url.hash === window.location.hash;
+        if (samePath) {
+            return;
+        }
+
+        event.preventDefault();
+        startExitTransition(() => {
+            window.location.href = url.href;
+        });
+    });
+
+    document.addEventListener('submit', (event) => {
+        const form = event.target;
+        if (!(form instanceof HTMLFormElement)) {
+            return;
+        }
+
+        const method = (form.method || 'get').toLowerCase();
+        if (method === 'get') {
+            return;
+        }
+
+        event.preventDefault();
+        startExitTransition(() => {
+            form.submit();
+        });
+    });
+</script>
 </body>
 </html>
