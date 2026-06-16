@@ -1,5 +1,8 @@
+import os
+
 from fastapi import FastAPI, Request, Form
 from fastapi.responses import HTMLResponse, RedirectResponse
+from starlette.middleware.sessions import SessionMiddleware
 import sqlite3
 from fastapi.templating import Jinja2Templates
 #use of sqlalchemy
@@ -8,10 +11,11 @@ seperate function for role base
 authorization function
 '''
 app = FastAPI()
+app.add_middleware(SessionMiddleware, secret_key=os.getenv("SECRET_KEY", "change-me"))
 
 templates = Jinja2Templates(directory="templates")
 
-@app.post('/', response_class=HTMLResponse)
+@app.get('/', response_class=HTMLResponse)
 async def home(request: Request):
     return templates.TemplateResponse(
         "home.html",
@@ -21,7 +25,7 @@ async def home(request: Request):
         }
     )
 
-@app.api_route('signup/',methods=["GET", "POST"], response_class=HTMLResponse)
+@app.api_route('/signup', methods=["GET", "POST"], response_class=HTMLResponse)
 async def signup(request: Request, username: str = Form(...), password: str = Form(...)):
     if request.method == "GET":
         return templates.TemplateResponse(
@@ -52,7 +56,7 @@ async def signup(request: Request, username: str = Form(...), password: str = Fo
     conn.close()
     return RedirectResponse(url="/", status_code=303)
 
-@app.api_route('login/', methods=['GET', 'POST'], response_class=HTMLResponse)
+@app.api_route('/login', methods=['GET', 'POST'], response_class=HTMLResponse)
 async def login_view(request: Request,username: str = Form(...),password: str = Form(...)):
     if request.method == "GET":
         return templates.TemplateResponse(
@@ -93,7 +97,7 @@ async def login_view(request: Request,username: str = Form(...),password: str = 
         status_code=303
     )
 
-@app.get('logout/')
+@app.get('/logout')
 async def logout_r(request: Request):
     request.session.clear()
     return RedirectResponse(
