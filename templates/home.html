@@ -3,8 +3,8 @@
 {% block title %}Home · The Journal{% endblock %}
 
 {% block content %}
-<section class="grid grid-2" style="align-items: start; margin-bottom: 1.5rem;">
-    <div class="card" style="padding: 2rem; display: flex; flex-direction: column; justify-content: center;">
+<section class="grid grid-2" style="align-items: center; justify-items: stretch; min-height: 100vh; margin-bottom: 1.5rem;">
+    <div class="card" style="padding: 2rem; display: flex; flex-direction: column; justify-content: center; height: 100%;">
         <p class="eyebrow">Write. Publish. Read.</p>
         <h1 class="hero-title">A clean blog experience for thoughtful writing.</h1>
         <p class="muted" style="font-size: 1.1rem; line-height: 1.8; max-width: 42rem; margin: 1rem 0 0;">
@@ -21,18 +21,18 @@
         </div>
     </div>
 
-    <div class="card" style="padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem; justify-content: space-between;">
-        <div>
+    <div class="card" style="padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem; justify-content: center; align-items: center; height: 100%; text-align: center;">
+        <div style="width: 100%; max-width: 90%;">
             <p class="eyebrow">Featured story</p>
             {% if featured_post %}
                 {% if featured_post.image_url %}
-                    <div style="margin-bottom: 1rem; overflow: hidden; border-radius: 1rem; max-height: 14rem;">
+                    <div style="margin-bottom: 1rem; overflow: hidden; border-radius: 1rem; max-height: 12rem;">
                         <img src="{{ featured_post.image_url }}" alt="{{ featured_post.title }}" style="width: 100%; height: auto; object-fit: cover; display: block;" />
                     </div>
                 {% endif %}
                 <h2 class="section-title" style="font-size: clamp(1.6rem, 2.4vw, 2.35rem); margin-bottom: 0.75rem;">{{ featured_post.title }}</h2>
                 <p class="muted" style="line-height: 1.8;">{{ featured_post.summary }}</p>
-                <div class="meta-row" style="margin-top: 1rem;">
+                <div class="meta-row" style="margin-top: 1rem; justify-content: center;">
                     <span class="pill">By {{ featured_post.author }}</span>
                     <span>{{ featured_post.created_at }}</span>
                 </div>
@@ -44,7 +44,7 @@
             {% endif %}
         </div>
         {% if featured_post %}
-            <a class="btn btn-primary" href="/article/{{ featured_post.id }}" style="align-self: flex-start;">Read Featured Article</a>
+            <a class="btn btn-primary" href="/article/{{ featured_post.id }}" style="align-self: center; margin-top: 1rem;">Read Featured Article</a>
         {% endif %}
     </div>
 </section>
