@@ -1,5 +1,13 @@
+<<<<<<< HEAD
 ﻿from datetime import datetime
 from pathlib import Path
+=======
+import os
+
+from fastapi import FastAPI, Request, Form
+from fastapi.responses import HTMLResponse, RedirectResponse
+from starlette.middleware.sessions import SessionMiddleware
+>>>>>>> 1f966aea1c277d80e80e32a1a190353e62247ed3
 import sqlite3
 
 from fastapi import FastAPI, Request, Form, HTTPException, status
@@ -13,11 +21,16 @@ DB_PATH = BASE_DIR / "blog.db"
 SECRET_KEY = "replace-this-with-a-long-secret-key"
 
 app = FastAPI()
+<<<<<<< HEAD
 app.add_middleware(SessionMiddleware, secret_key=SECRET_KEY)
 app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="static")
+=======
+app.add_middleware(SessionMiddleware, secret_key=os.getenv("SECRET_KEY", "change-me"))
+>>>>>>> 1f966aea1c277d80e80e32a1a190353e62247ed3
 
 templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 
+<<<<<<< HEAD
 def get_db_connection():
     connection = sqlite3.connect(str(DB_PATH))
     connection.row_factory = sqlite3.Row
@@ -80,6 +93,9 @@ def get_post(post_id: int):
 
 
 @app.get("/", response_class=HTMLResponse)
+=======
+@app.get('/', response_class=HTMLResponse)
+>>>>>>> 1f966aea1c277d80e80e32a1a190353e62247ed3
 async def home(request: Request):
     user = get_current_user(request)
     connection = get_db_connection()
@@ -88,6 +104,7 @@ async def home(request: Request):
     posts = [dict(row) for row in cursor.fetchall()]
     connection.close()
     return templates.TemplateResponse(
+<<<<<<< HEAD
         "home.html",
         {"request": request, "posts": posts, "user": user},
     )
@@ -115,14 +132,79 @@ async def signup(request: Request, username: str = Form(...), password: str = Fo
                 "message": "Username already exists.",
                 "user": get_current_user(request),
             },
+=======
+        request=request,
+        name="home.html",
+        context={}
+    )
+
+@app.get('/signup', response_class=HTMLResponse)
+async def signup_form(request: Request):
+    return templates.TemplateResponse(
+        request=request,
+        name="signup.html",
+        context={"message": ""}
+    )
+
+@app.post('/signup', response_class=HTMLResponse)
+async def signup(request: Request, username: str = Form(...), password: str = Form(...)):
+    conn = sqlite3.connect("users.db")
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM users WHERE username = ?", (username,))
+    existing_user = cursor.fetchone()
+    if existing_user:
+        conn.close()
+        return templates.TemplateResponse(
+            request=request,
+            name="signup.html",
+            context={"message": "Username already exists!"}
+>>>>>>> 1f966aea1c277d80e80e32a1a190353e62247ed3
         )
 
     cursor.execute(
         "INSERT INTO users (username, password) VALUES (?, ?)",
         (username, password),
     )
+<<<<<<< HEAD
     connection.commit()
     connection.close()
+=======
+    conn.commit()
+    conn.close()
+    return RedirectResponse(url="/", status_code=303)
+
+@app.get('/login', response_class=HTMLResponse)
+async def login_form(request: Request):
+    return templates.TemplateResponse(
+        request=request,
+        name="login.html",
+        context={"message": ""}
+    )
+
+@app.post('/login', response_class=HTMLResponse)
+async def login_view(request: Request, username: str = Form(...), password: str = Form(...)):
+    conn = sqlite3.connect("users.db")
+    cursor = conn.cursor()
+    cursor.execute(
+        "SELECT * FROM users WHERE username = ?",
+        (username,)
+    )
+    user = cursor.fetchone()
+    conn.close()
+    if not user:
+        return templates.TemplateResponse(
+            request=request,
+            name="login.html",
+            context={"message": "User not found!"}
+        )
+    stored_password = user[2]
+    if stored_password != password:
+        return templates.TemplateResponse(
+            request=request,
+            name="login.html",
+            context={"message": "Invalid password!"}
+        )
+>>>>>>> 1f966aea1c277d80e80e32a1a190353e62247ed3
     request.session["user"] = username
     return RedirectResponse(url="/", status_code=status.HTTP_303_SEE_OTHER)
 
@@ -134,6 +216,7 @@ async def login_form(request: Request):
         {"request": request, "message": "", "user": get_current_user(request)},
     )
 
+<<<<<<< HEAD
 
 @app.post("/login", response_class=HTMLResponse)
 async def login(request: Request, username: str = Form(...), password: str = Form(...)):
@@ -159,6 +242,10 @@ async def login(request: Request, username: str = Form(...), password: str = For
 
 @app.get("/logout")
 async def logout(request: Request):
+=======
+@app.get('/logout')
+async def logout_r(request: Request):
+>>>>>>> 1f966aea1c277d80e80e32a1a190353e62247ed3
     request.session.clear()
     return RedirectResponse(url="/", status_code=status.HTTP_303_SEE_OTHER)
 

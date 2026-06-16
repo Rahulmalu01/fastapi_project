@@ -1,8 +1,14 @@
 __pycache__/
 *.pyc
+<<<<<<< HEAD
 *.pyo
 *.db
 .env
 .venv/
 venv/
 .DS_Store
+=======
+users.db
+.venv/
+venv/
+>>>>>>> 1f966aea1c277d80e80e32a1a190353e62247ed3
