@@ -18,23 +18,21 @@ templates = Jinja2Templates(directory="templates")
 @app.get('/', response_class=HTMLResponse)
 async def home(request: Request):
     return templates.TemplateResponse(
-        "home.html",
-        {
-            "request": request,
-            "message": ""
-        }
+        request=request,
+        name="home.html",
+        context={}
     )
 
-@app.api_route('/signup', methods=["GET", "POST"], response_class=HTMLResponse)
+@app.get('/signup', response_class=HTMLResponse)
+async def signup_form(request: Request):
+    return templates.TemplateResponse(
+        request=request,
+        name="signup.html",
+        context={"message": ""}
+    )
+
+@app.post('/signup', response_class=HTMLResponse)
 async def signup(request: Request, username: str = Form(...), password: str = Form(...)):
-    if request.method == "GET":
-        return templates.TemplateResponse(
-            "signup.html",
-            {
-                "request": request,
-                "message": ""
-            }
-        )
     conn = sqlite3.connect("users.db")
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM users WHERE username = ?", (username,))
@@ -42,11 +40,9 @@ async def signup(request: Request, username: str = Form(...), password: str = Fo
     if existing_user:
         conn.close()
         return templates.TemplateResponse(
-            "signup.html",
-            {
-                "request": request,
-                "message": "Username already exists!"
-            }
+            request=request,
+            name="signup.html",
+            context={"message": "Username already exists!"}
         )
     cursor.execute(
         "INSERT INTO users (username, password) VALUES (?, ?)",
@@ -56,16 +52,16 @@ async def signup(request: Request, username: str = Form(...), password: str = Fo
     conn.close()
     return RedirectResponse(url="/", status_code=303)
 
-@app.api_route('/login', methods=['GET', 'POST'], response_class=HTMLResponse)
-async def login_view(request: Request,username: str = Form(...),password: str = Form(...)):
-    if request.method == "GET":
-        return templates.TemplateResponse(
-            "login.html",
-            {
-                'request' : request,
-                "message": ""
-            }
-        )
+@app.get('/login', response_class=HTMLResponse)
+async def login_form(request: Request):
+    return templates.TemplateResponse(
+        request=request,
+        name="login.html",
+        context={"message": ""}
+    )
+
+@app.post('/login', response_class=HTMLResponse)
+async def login_view(request: Request, username: str = Form(...), password: str = Form(...)):
     conn = sqlite3.connect("users.db")
     cursor = conn.cursor()
     cursor.execute(
@@ -76,20 +72,16 @@ async def login_view(request: Request,username: str = Form(...),password: str = 
     conn.close()
     if not user:
         return templates.TemplateResponse(
-            "login.html",
-            {
-                "request": request,
-                "message": "User not found!"
-            }
+            request=request,
+            name="login.html",
+            context={"message": "User not found!"}
         )
     stored_password = user[2]
     if stored_password != password:
         return templates.TemplateResponse(
-            "login.html",
-            {
-                "request": request,
-                "message": "Invalid password!"
-            }
+            request=request,
+            name="login.html",
+            context={"message": "Invalid password!"}
         )
     request.session["user"] = username
     return RedirectResponse(
