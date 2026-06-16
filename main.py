@@ -116,7 +116,7 @@ def on_startup():
                 "Great stories don’t just entertain. They linger, change us, and invite us to imagine a different path...",
                 "editor",
                 datetime.utcnow().strftime("%b %d, %Y"),
-                "https://images.unsplash.com/photo-1496307042754-b4aa456c4a2d?w=1200&q=80",
+                "https://i.pinimg.com/736x/10/bc/bd/10bcbdc51fdacda178fbf70267e19251.jpg",
             ),
         ]
         for t, s, b, a, c, img in sample:
