@@ -1,12 +1,5 @@
-<<<<<<< HEAD
-fastapi>=0.110.0
-uvicorn[standard]>=0.23.0
-jinja2>=3.0
-python-multipart>=0.0.6
-=======
 fastapi
 uvicorn
 jinja2
 python-multipart
 itsdangerous
->>>>>>> 1f966aea1c277d80e80e32a1a190353e62247ed3
