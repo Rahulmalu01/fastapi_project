@@ -3,9 +3,10 @@ import sqlite3
 from datetime import datetime
 from pathlib import Path
 
-from fastapi import FastAPI, Form, Request
+from fastapi import FastAPI, Form, Request, UploadFile, File
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
+from fastapi.staticfiles import StaticFiles
 from starlette.middleware.sessions import SessionMiddleware
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -14,6 +15,7 @@ DB_PATH = BASE_DIR / "users.db"
 app = FastAPI()
 app.add_middleware(SessionMiddleware, secret_key=os.getenv("SECRET_KEY", "change-me"))
 templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
+app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="static")
 
 
 def get_db_connection():
@@ -42,10 +44,17 @@ def init_db():
             summary TEXT NOT NULL,
             body TEXT NOT NULL,
             author TEXT NOT NULL,
-            created_at TEXT NOT NULL
+            created_at TEXT NOT NULL,
+            image_url TEXT
         )
         """
     )
+    # ensure legacy tables add image_url when migrating from older versions
+    try:
+        cursor.execute("ALTER TABLE posts ADD COLUMN image_url TEXT")
+    except Exception:
+        # column probably already exists
+        pass
     connection.commit()
     connection.close()
 
@@ -53,6 +62,37 @@ def init_db():
 @app.on_event("startup")
 def on_startup():
     init_db()
+    # seed a few example posts with images for demos
+    connection = get_db_connection()
+    cursor = connection.cursor()
+    cursor.execute("SELECT COUNT(*) as cnt FROM posts")
+    count = cursor.fetchone()[0]
+    if count == 0:
+        sample = [
+            (
+                "A Quiet Morning in the City",
+                "How small rituals can change your day.",
+                "It was a quiet morning when the idea first came to him...",
+                "editor",
+                datetime.utcnow().strftime("%b %d, %Y"),
+                "https://images.unsplash.com/photo-1502082553048-f009c37129b9?w=1200&q=80",
+            ),
+            (
+                "On Building Things People Love",
+                "A short reflection on product and craft.",
+                "We build to solve problems, and sometimes the problems change us...",
+                "editor",
+                datetime.utcnow().strftime("%b %d, %Y"),
+                "https://images.unsplash.com/photo-1506765515384-028b60a970df?w=1200&q=80",
+            ),
+        ]
+        for t, s, b, a, c, img in sample:
+            cursor.execute(
+                "INSERT INTO posts (title, summary, body, author, created_at, image_url) VALUES (?, ?, ?, ?, ?, ?)",
+                (t, s, b, a, c, img),
+            )
+        connection.commit()
+    connection.close()
 
 
 def get_current_user(request: Request):
@@ -187,6 +227,7 @@ async def publish_article(
     title: str = Form(...),
     summary: str = Form(""),
     body: str = Form(...),
+    image: UploadFile | None = File(None),
 ):
     user = get_current_user(request)
     if not user:
@@ -194,12 +235,22 @@ async def publish_article(
 
     clean_summary = summary.strip() or body.strip().split("\n", 1)[0][:180]
     created_at = datetime.utcnow().strftime("%b %d, %Y")
+    image_url = None
+    # handle file upload
+    if image and image.filename:
+        uploads_dir = BASE_DIR / "static" / "uploads"
+        uploads_dir.mkdir(parents=True, exist_ok=True)
+        safe_name = f"{int(datetime.utcnow().timestamp())}_{image.filename.replace(' ', '_')}"
+        dest_path = uploads_dir / safe_name
+        with open(dest_path, "wb") as f:
+            f.write(await image.read())
+        image_url = f"/static/uploads/{safe_name}"
 
     connection = get_db_connection()
     cursor = connection.cursor()
     cursor.execute(
-        "INSERT INTO posts (title, summary, body, author, created_at) VALUES (?, ?, ?, ?, ?)",
-        (title.strip(), clean_summary, body.strip(), user["username"], created_at),
+        "INSERT INTO posts (title, summary, body, author, created_at, image_url) VALUES (?, ?, ?, ?, ?, ?)",
+        (title.strip(), clean_summary, body.strip(), user["username"], created_at, image_url),
     )
     connection.commit()
     article_id = cursor.lastrowid
@@ -223,6 +274,58 @@ async def articles(request: Request):
             "view": view if view == "mine" else "all",
         },
     )
+
+
+@app.get("/article/{post_id}/edit", response_class=HTMLResponse)
+async def edit_article_form(request: Request, post_id: int):
+    user = get_current_user(request)
+    if not user:
+        return RedirectResponse(url=f"/signin?next=/article/{post_id}/edit", status_code=303)
+
+    post = fetch_post(post_id)
+    if not post:
+        return RedirectResponse(url="/articles", status_code=303)
+
+    if post["author"] != user["username"]:
+        return RedirectResponse(url=f"/article/{post_id}", status_code=303)
+
+    form_data = {"id": post["id"], "title": post["title"], "summary": post["summary"], "body": post["body"], "image_url": post.get("image_url")}
+    return render_template(request, "publisharticle.html", {"message": "", "form_data": form_data, "edit_mode": True, "action": f"/article/{post_id}/edit"})
+
+
+@app.post("/article/{post_id}/edit", response_class=HTMLResponse)
+async def edit_article(request: Request, post_id: int, title: str = Form(...), summary: str = Form(""), body: str = Form(...), image: UploadFile | None = File(None)):
+    user = get_current_user(request)
+    if not user:
+        return RedirectResponse(url=f"/signin?next=/article/{post_id}/edit", status_code=303)
+
+    post = fetch_post(post_id)
+    if not post:
+        return RedirectResponse(url="/articles", status_code=303)
+
+    if post["author"] != user["username"]:
+        return RedirectResponse(url=f"/article/{post_id}", status_code=303)
+
+    image_url = post.get("image_url")
+    if image and image.filename:
+        uploads_dir = BASE_DIR / "static" / "uploads"
+        uploads_dir.mkdir(parents=True, exist_ok=True)
+        safe_name = f"{int(datetime.utcnow().timestamp())}_{image.filename.replace(' ', '_')}"
+        dest_path = uploads_dir / safe_name
+        with open(dest_path, "wb") as f:
+            f.write(await image.read())
+        image_url = f"/static/uploads/{safe_name}"
+
+    connection = get_db_connection()
+    cursor = connection.cursor()
+    cursor.execute(
+        "UPDATE posts SET title = ?, summary = ?, body = ?, image_url = ? WHERE id = ?",
+        (title.strip(), summary.strip(), body.strip(), image_url, post_id),
+    )
+    connection.commit()
+    connection.close()
+
+    return RedirectResponse(url=f"/article/{post_id}", status_code=303)
 
 
 @app.get("/article/{post_id}", response_class=HTMLResponse)

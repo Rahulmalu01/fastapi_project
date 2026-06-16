@@ -13,21 +13,28 @@
             <div class="notice">{{ message }}</div>
         {% endif %}
 
-        <form action="/publish" method="post" style="margin-top: 1.5rem;">
+        <form action="{{ action if action is defined else '/publish' }}" method="post" enctype="multipart/form-data" style="margin-top: 1.5rem;">
             <div class="field">
                 <label for="title">Title</label>
-                <input id="title" type="text" name="title" placeholder="Write a compelling headline" required>
+                <input id="title" type="text" name="title" placeholder="Write a compelling headline" required value="{{ form_data.title if form_data is defined and form_data.title is defined else '' }}">
             </div>
             <div class="field">
                 <label for="summary">Summary</label>
-                <textarea id="summary" name="summary" placeholder="A short summary that appears in article cards"></textarea>
+                <textarea id="summary" name="summary" placeholder="A short summary that appears in article cards">{{ form_data.summary if form_data is defined and form_data.summary is defined else '' }}</textarea>
             </div>
             <div class="field">
                 <label for="body">Article body</label>
-                <textarea id="body" name="body" placeholder="Start writing your story here..." required style="min-height: 360px;"></textarea>
+                <textarea id="body" name="body" placeholder="Start writing your story here..." required style="min-height: 360px;">{{ form_data.body if form_data is defined and form_data.body is defined else '' }}</textarea>
+            </div>
+            <div class="field">
+                <label for="image">Cover photo (optional)</label>
+                <input id="image" type="file" name="image" accept="image/*">
+                {% if form_data is defined and form_data.image_url %}
+                    <div style="margin-top:0.5rem;"><img src="{{ form_data.image_url }}" alt="cover" style="width:100%;border-radius:12px;object-fit:cover;max-height:240px;"/></div>
+                {% endif %}
             </div>
             <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; margin-top: 1rem;">
-                <button class="btn btn-primary" type="submit">Publish article</button>
+                <button class="btn btn-primary" type="submit">{% if edit_mode %}Update article{% else %}Publish article{% endif %}</button>
                 <a class="btn btn-secondary" href="/articles">Preview existing articles</a>
             </div>
         </form>
