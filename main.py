@@ -1,5 +1,6 @@
 import os
 import sqlite3
+import shutil
 from datetime import datetime
 from pathlib import Path
 
@@ -242,8 +243,13 @@ async def publish_article(
         uploads_dir.mkdir(parents=True, exist_ok=True)
         safe_name = f"{int(datetime.utcnow().timestamp())}_{image.filename.replace(' ', '_')}"
         dest_path = uploads_dir / safe_name
+        # stream the upload to disk to avoid loading whole file into memory
+        try:
+            image.file.seek(0)
+        except Exception:
+            pass
         with open(dest_path, "wb") as f:
-            f.write(await image.read())
+            shutil.copyfileobj(image.file, f)
         image_url = f"/static/uploads/{safe_name}"
 
     connection = get_db_connection()
@@ -312,8 +318,12 @@ async def edit_article(request: Request, post_id: int, title: str = Form(...), s
         uploads_dir.mkdir(parents=True, exist_ok=True)
         safe_name = f"{int(datetime.utcnow().timestamp())}_{image.filename.replace(' ', '_')}"
         dest_path = uploads_dir / safe_name
+        try:
+            image.file.seek(0)
+        except Exception:
+            pass
         with open(dest_path, "wb") as f:
-            f.write(await image.read())
+            shutil.copyfileobj(image.file, f)
         image_url = f"/static/uploads/{safe_name}"
 
     connection = get_db_connection()
