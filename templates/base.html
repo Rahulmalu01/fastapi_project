@@ -345,15 +345,20 @@
         }
         /* Intro overlay styles */
         #intro-overlay {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 1rem;
             background: linear-gradient(180deg, rgba(250,250,250,1), rgba(246,241,234,1));
             transition: opacity 420ms ease, transform 420ms ease;
         }
-        #intro-text { opacity: 0; transform: translateY(6px); transition: opacity 260ms ease, transform 260ms ease; }
+        #intro-text { opacity: 0; transform: translateY(6px); transition: opacity 260ms ease, transform 260ms ease; margin: 0; }
     </style>
     {% block extra_head %}{% endblock %}
 </head>
 <body>
-<div id="intro-overlay" style="position:fixed;inset:0;display:grid;place-items:center;background:var(--surface-solid);z-index:1000;">
+<div id="intro-overlay" style="position:fixed;inset:0;background:var(--surface-solid);z-index:1000;">
     <h1 id="intro-text" style="font-family:Merriweather, serif; font-size:3.5rem; letter-spacing:-0.02em;">The Journal</h1>
 </div>
 <div class="shell">
