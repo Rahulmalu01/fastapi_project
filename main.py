@@ -1,28 +1,28 @@
-import os
-import sqlite3
-import shutil
-from datetime import datetime
-from pathlib import Path
+import os #to interact with environment variable (not necessary tbh)
+import sqlite3 #sqllite database
+import shutil #handle file uploads
+from datetime import datetime #date/timestamp for articles
+from pathlib import Path #handle modern file path
 
-from fastapi import FastAPI, Form, Request, UploadFile, File
-from fastapi.responses import HTMLResponse, RedirectResponse
-from fastapi.templating import Jinja2Templates
-from fastapi.staticfiles import StaticFiles
-from starlette.middleware.sessions import SessionMiddleware
+from fastapi import FastAPI, Form, Request, UploadFile, File #form - handle form data, Request - handle incoming request, UploadFile and File - handle file uploads
+from fastapi.responses import HTMLResponse, RedirectResponse #html response and redirect response for navigation
+from fastapi.templating import Jinja2Templates #to render html templates with dynamic data
+from fastapi.staticfiles import StaticFiles #handle static files in our project (css in this case)
+from starlette.middleware.sessions import SessionMiddleware #handles user sessions for login/logout functionality
 
-BASE_DIR = Path(__file__).resolve().parent
-DB_PATH = BASE_DIR / "users.db"
+BASE_DIR = Path(__file__).resolve().parent #base project dir
+DB_PATH = BASE_DIR / "users.db" #database file path
 
 app = FastAPI()
-app.add_middleware(SessionMiddleware, secret_key=os.getenv("SECRET_KEY", "change-me"))
-templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
-app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="static")
+app.add_middleware(SessionMiddleware, secret_key=os.getenv("SECRET_KEY", "change-me")) #acts as a protection between routes, secret key - cookie sigining
+templates = Jinja2Templates(directory=str(BASE_DIR / "templates")) #render html templates from the templates directory
+app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="static") #mount static files (css, js, images) to the /static route
 
 
 def get_db_connection():
     connection = sqlite3.connect(str(DB_PATH))
     connection.row_factory = sqlite3.Row
-    return connection
+    return connection #helper function
 
 
 def init_db():
@@ -49,8 +49,8 @@ def init_db():
             image_url TEXT
         )
         """
-    )
-    # ensure legacy tables add image_url when migrating from older versions
+    ) #database initialization, creates users and posts tables if they don't exist
+        #cursor - it is a control structure object used to interact with database, execute queries and fetch results
     try:
         cursor.execute("ALTER TABLE posts ADD COLUMN image_url TEXT")
     except Exception:
@@ -107,6 +107,15 @@ def get_current_user(request: Request):
     user = cursor.fetchone()
     connection.close()
     return dict(user) if user else None
+
+
+def fetch_users():
+    connection = get_db_connection()
+    cursor = connection.cursor()
+    cursor.execute("SELECT id, username FROM users ORDER BY id ASC")
+    users = [dict(row) for row in cursor.fetchall()]
+    connection.close()
+    return users
 
 
 def fetch_posts(limit: int | None = None, author: str | None = None):
@@ -362,3 +371,18 @@ async def read_article(request: Request, post_id: int):
 async def logout_r(request: Request):
     request.session.clear()
     return RedirectResponse(url="/", status_code=303)
+
+
+@app.get("/db_route", response_class=HTMLResponse)
+async def db_route(request: Request):
+    users = fetch_users()
+    posts = fetch_posts()
+    return templates.TemplateResponse(
+        "db_view.html",
+        {
+            "request": request,
+            "user": get_current_user(request),
+            "users": users,
+            "posts": posts,
+        },
+    )

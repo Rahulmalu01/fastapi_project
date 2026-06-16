@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block title %}Database Viewer · The Journal{% endblock %}
+
+{% block content %}
+<section class="card" style="padding: 2rem; margin-bottom: 1.5rem;">
+    <p class="eyebrow">Hidden admin view</p>
+    <div style="display: flex; align-items: flex-end; justify-content: space-between; gap: 1rem; flex-wrap: wrap;">
+        <div>
+            <h1 class="section-title">Database viewer</h1>
+            <p class="muted" style="line-height: 1.8; max-width: 48rem; margin-top: 0.8rem;">This page shows the current rows from the app database. Use the secret URL to inspect the users and posts tables.</p>
+        </div>
+    </div>
+</section>
+
+<section class="card" style="padding: 2rem; margin-bottom: 1.5rem;">
+    <h2>Users</h2>
+    {% if users %}
+        <table class="table" style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Username</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in users %}
+                    <tr>
+                        <td>{{ user.id }}</td>
+                        <td>{{ user.username }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No users found.</p>
+    {% endif %}
+</section>
+
+<section class="card" style="padding: 2rem; margin-bottom: 1.5rem;">
+    <h2>Posts</h2>
+    {% if posts %}
+        <table class="table" style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Title</th>
+                    <th>Author</th>
+                    <th>Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for post in posts %}
+                    <tr>
+                        <td>{{ post.id }}</td>
+                        <td>{{ post.title }}</td>
+                        <td>{{ post.author }}</td>
+                        <td>{{ post.created_at }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No posts found.</p>
+    {% endif %}
+</section>
+{% endblock %}
