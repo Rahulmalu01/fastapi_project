@@ -100,7 +100,7 @@ def on_startup():
                 "Success rarely arrives overnight. It arrives in the quiet steps that no one sees...",
                 "editor",
                 datetime.utcnow().strftime("%b %d, %Y"),
-                "https://images.unsplash.com/photo-1493815793585-4b1a17b3f4c9?w=1200&q=80",
+                "https://pbs.twimg.com/profile_images/2005518103120416768/DzRtodtH.jpg",
             ),
             (
                 "The Art of Starting Again",
