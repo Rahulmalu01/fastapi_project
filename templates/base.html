@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}FastAPI Blog{% endblock %}</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <header class="site-header">
+        <div class="container">
+            <a class="brand" href="/">FastAPI Blog</a>
+            <nav class="site-nav">
+                <a href="/">Home</a>
+                {% if user %}
+                    <a href="/new">New Post</a>
+                    <span class="signed-in">Signed in as {{ user.username }}</span>
+                    <a href="/logout">Logout</a>
+                {% else %}
+                    <a href="/login">Login</a>
+                    <a href="/signup">Signup</a>
+                {% endif %}
+            </nav>
+        </div>
+    </header>
+    <main class="content container">
+        {% block content %}{% endblock %}
+    </main>
+    <footer class="site-footer">
+        <div class="container">
+            <p>Simple FastAPI blog with authentication and SQLite storage.</p>
+        </div>
+    </footer>
+</body>
+</html>

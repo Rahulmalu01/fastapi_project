@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block title %}Home · FastAPI Blog{% endblock %}
+
+{% block content %}
+    <section class="hero">
+        <h1>Welcome to the FastAPI Blog</h1>
+        <p>Read posts, write your own, and manage your content with a clean modern interface.</p>
+    </section>
+
+    {% if posts %}
+        <section class="posts">
+            {% for post in posts %}
+                <article class="post-preview">
+                    <h2><a href="/post/{{ post.id }}">{{ post.title }}</a></h2>
+                    <p class="meta">By {{ post.author }} · {{ post.created_at }}</p>
+                    <p>{{ post.body[:250] }}{% if post.body|length > 250 %}...{% endif %}</p>
+                    <a class="button small" href="/post/{{ post.id }}">Read more</a>
+                </article>
+            {% endfor %}
+        </section>
+    {% else %}
+        <div class="empty-state">
+            <p>No posts are available yet.</p>
+            {% if user %}
+                <a class="button" href="/new">Create the first post</a>
+            {% else %}
+                <p><a href="/login">Login</a> or <a href="/signup">Signup</a> to start writing.</p>
+            {% endif %}
+        </div>
+    {% endif %}
+{% endblock %}

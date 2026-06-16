@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block title %}{{ post.title }} · FastAPI Blog{% endblock %}
+
+{% block content %}
+    <article class="post-page">
+        <h1>{{ post.title }}</h1>
+        <p class="meta">By {{ post.author }} · {{ post.created_at }}</p>
+        <div class="post-body">
+            {{ post.body | replace("\n", "<br>") | safe }}
+        </div>
+        <div style="margin-top: 1.5rem; display: flex; gap: 0.75rem; flex-wrap: wrap;">
+            <a class="button" href="/">Back to home</a>
+            {% if user and user.username == post.author %}
+                <a class="button small" href="/post/{{ post.id }}/edit">Edit</a>
+                <form class="inline-form" action="/post/{{ post.id }}/delete" method="post">
+                    <button class="button small danger" type="submit">Delete</button>
+                </form>
+            {% endif %}
+        </div>
+    </article>
+{% endblock %}
