@@ -86,6 +86,38 @@ def on_startup():
                 datetime.utcnow().strftime("%b %d, %Y"),
                 "https://images.unsplash.com/photo-1506765515384-028b60a970df?w=1200&q=80",
             ),
+            (
+                "Why Quiet Work Matters",
+                "A deep dive into focus, rituals, and modern productivity.",
+                "The best work is often done in silence, when your mind is clear and the world is far away...",
+                "editor",
+                datetime.utcnow().strftime("%b %d, %Y"),
+                "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=1200&q=80",
+            ),
+            (
+                "Trailblazers and Tiny Wins",
+                "The hidden progress behind every success story.",
+                "Success rarely arrives overnight. It arrives in the quiet steps that no one sees...",
+                "editor",
+                datetime.utcnow().strftime("%b %d, %Y"),
+                "https://images.unsplash.com/photo-1493815793585-4b1a17b3f4c9?w=1200&q=80",
+            ),
+            (
+                "The Art of Starting Again",
+                "Why every reset is also an opportunity.",
+                "Sometimes the most important choice is not to continue, but to begin again with wiser eyes...",
+                "editor",
+                datetime.utcnow().strftime("%b %d, %Y"),
+                "https://images.unsplash.com/photo-1487014679447-9f8336841d58?w=1200&q=80",
+            ),
+            (
+                "Stories That Stay With You",
+                "What happens when a narrative becomes part of who you are?",
+                "Great stories don’t just entertain. They linger, change us, and invite us to imagine a different path...",
+                "editor",
+                datetime.utcnow().strftime("%b %d, %Y"),
+                "https://images.unsplash.com/photo-1496307042754-b4aa456c4a2d?w=1200&q=80",
+            ),
         ]
         for t, s, b, a, c, img in sample:
             cursor.execute(
