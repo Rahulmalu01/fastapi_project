@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block title %}Sign In · The Journal{% endblock %}
+
+{% block content %}
+<section class="grid" style="place-items: center; min-height: 70vh;">
+    <div class="card" style="width: min(100%, 480px); padding: 2rem;">
+        <p class="eyebrow">Welcome back</p>
+        <h1 class="section-title" style="font-size: clamp(1.8rem, 3vw, 2.5rem);">Sign in to continue writing</h1>
+        <p class="muted" style="line-height: 1.8; margin-top: 0.75rem;">Access your drafts, publish new stories, and read the latest articles from the community.</p>
+
+        {% if message %}
+            <div class="notice">{{ message }}</div>
+        {% endif %}
+
+        <form action="/signin" method="post" style="margin-top: 1.4rem; display: grid; gap: 1rem;">
+            <div class="field">
+                <label for="username">Username</label>
+                <input id="username" type="text" name="username" placeholder="Enter your username" required>
+            </div>
+            <div class="field">
+                <label for="password">Password</label>
+                <input id="password" type="password" name="password" placeholder="Enter your password" required>
+            </div>
+            <button class="btn btn-primary" type="submit" style="width: 100%;">Sign In</button>
+        </form>
+
+        <p class="muted" style="margin-top: 1.1rem; text-align: center;">New here? <a href="/signup" style="color: var(--accent); font-weight: 800;">Create an account</a></p>
+    </div>
+</section>
+{% endblock %}

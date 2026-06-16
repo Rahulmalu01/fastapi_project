@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block title %}Publish Article · The Journal{% endblock %}
+
+{% block content %}
+<section class="editor-shell">
+    <div class="card" style="padding: 1.75rem;">
+        <p class="eyebrow">New story</p>
+        <h1 class="section-title" style="font-size: clamp(2rem, 3vw, 3rem);">Write an article worth reading</h1>
+        <p class="muted" style="margin-top: 0.75rem; line-height: 1.8;">Compose your title, a strong summary, and the full article body. This is the writing surface for your Medium-style blog.</p>
+
+        {% if message %}
+            <div class="notice">{{ message }}</div>
+        {% endif %}
+
+        <form action="/publish" method="post" style="margin-top: 1.5rem;">
+            <div class="field">
+                <label for="title">Title</label>
+                <input id="title" type="text" name="title" placeholder="Write a compelling headline" required>
+            </div>
+            <div class="field">
+                <label for="summary">Summary</label>
+                <textarea id="summary" name="summary" placeholder="A short summary that appears in article cards"></textarea>
+            </div>
+            <div class="field">
+                <label for="body">Article body</label>
+                <textarea id="body" name="body" placeholder="Start writing your story here..." required style="min-height: 360px;"></textarea>
+            </div>
+            <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; margin-top: 1rem;">
+                <button class="btn btn-primary" type="submit">Publish article</button>
+                <a class="btn btn-secondary" href="/articles">Preview existing articles</a>
+            </div>
+        </form>
+    </div>
+
+    <aside class="card" style="padding: 1.75rem; align-self: start;">
+        <p class="eyebrow">Publishing guide</p>
+        <h2 class="section-title" style="font-size: clamp(1.5rem, 2.2vw, 2rem);">Make it read like a real magazine piece</h2>
+        <div class="story-card" style="margin-top: 1rem; background: rgba(255,255,255,0.6);">
+            <h3 style="font-size: 1.2rem; margin-bottom: 0.65rem;">Suggested structure</h3>
+            <ul style="margin: 0; padding-left: 1.2rem; color: var(--muted); line-height: 1.8;">
+                <li>Lead with a strong headline.</li>
+                <li>Use a concise summary for the article card.</li>
+                <li>Break the body into clear paragraphs.</li>
+                <li>Keep the opening paragraph sharp and direct.</li>
+            </ul>
+        </div>
+        <div class="story-card" style="margin-top: 1rem; background: rgba(31, 111, 84, 0.06); border-color: rgba(31, 111, 84, 0.16);">
+            <p class="muted" style="margin: 0; line-height: 1.8;">
+                Your article will appear immediately in the feed and on the read page after publishing.
+            </p>
+        </div>
+    </aside>
+</section>
+{% endblock %}

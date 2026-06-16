@@ -1,214 +1,84 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FastAPI Auth - Home</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+{% extends "base.html" %}
 
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
+{% block title %}Home · The Journal{% endblock %}
 
-        .navbar {
-            background: rgba(255, 255, 255, 0.95) !important;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-        }
-
-        .navbar-brand {
-            font-weight: 700;
-            font-size: 1.5rem;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .nav-link {
-            font-weight: 500;
-            color: #333 !important;
-            transition: color 0.3s ease;
-        }
-
-        .nav-link:hover {
-            color: #667eea !important;
-        }
-
-        .btn-nav {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white !important;
-            border: none;
-            border-radius: 8px;
-            padding: 8px 20px;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            margin: 0 5px;
-        }
-
-        .btn-nav:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
-        }
-
-        main {
-            flex: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 60px 20px;
-        }
-
-        .hero {
-            text-align: center;
-            color: white;
-            animation: fadeInDown 0.8s ease;
-        }
-
-        .hero h1 {
-            font-size: 4rem;
-            font-weight: 800;
-            margin-bottom: 20px;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
-        }
-
-        .hero p {
-            font-size: 1.4rem;
-            margin-bottom: 40px;
-            opacity: 0.95;
-        }
-
-        .btn-group {
-            display: flex;
-            gap: 20px;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
-
-        .btn-primary, .btn-secondary {
-            padding: 14px 40px;
-            border: none;
-            border-radius: 10px;
-            font-weight: 600;
-            font-size: 1.1rem;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-decoration: none;
-            display: inline-block;
-        }
-
-        .btn-primary {
-            background: white;
-            color: #667eea;
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-            text-decoration: none;
-        }
-
-        .btn-secondary {
-            background: rgba(255, 255, 255, 0.2);
-            color: white;
-            border: 2px solid white;
-        }
-
-        .btn-secondary:hover {
-            background: rgba(255, 255, 255, 0.3);
-            text-decoration: none;
-        }
-
-        footer {
-            background: rgba(0, 0, 0, 0.3);
-            color: white;
-            text-align: center;
-            padding: 20px;
-            backdrop-filter: blur(10px);
-        }
-
-        @keyframes fadeInDown {
-            from {
-                opacity: 0;
-                transform: translateY(-30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        @media (max-width: 768px) {
-            .hero h1 {
-                font-size: 2.5rem;
-            }
-            .hero p {
-                font-size: 1.1rem;
-            }
-            .btn-group {
-                flex-direction: column;
-                gap: 15px;
-            }
-            .btn-primary, .btn-secondary {
-                width: 100%;
-            }
-        }
-    </style>
-</head>
-<body>
-    <nav class="navbar navbar-expand-lg navbar-light">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="/">
-                <i class="fas fa-rocket"></i> FastAPI Auth
-            </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                        <a class="btn btn-nav" href="/login">Login</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="btn btn-nav" href="/signup">Sign Up</a>
-                    </li>
-                </ul>
-            </div>
+{% block content %}
+<section class="grid grid-2" style="align-items: stretch; margin-bottom: 1.5rem;">
+    <div class="card" style="padding: 2rem; display: flex; flex-direction: column; justify-content: center; min-height: 28rem;">
+        <p class="eyebrow">Write. Publish. Read.</p>
+        <h1 class="hero-title">A clean blog experience for thoughtful writing.</h1>
+        <p class="muted" style="font-size: 1.1rem; line-height: 1.8; max-width: 42rem; margin: 1rem 0 0;">
+            The Journal gives you a polished Medium-style reading experience with a strong editorial feel, fast publishing, and a simple interface for showcasing articles.
+        </p>
+        <div style="display: flex; gap: 0.8rem; flex-wrap: wrap; margin-top: 1.8rem;">
+            <a class="btn btn-primary" href="/publish">Publish an Article</a>
+            <a class="btn btn-secondary" href="/articles">Explore Stories</a>
         </div>
-    </nav>
+        <div style="display: flex; gap: 0.8rem; flex-wrap: wrap; margin-top: 1.6rem;">
+            <span class="pill">FastAPI backend</span>
+            <span class="pill">SQLite storage</span>
+            <span class="pill">Author sign-in</span>
+        </div>
+    </div>
 
-    <main>
-        <div class="text-center">
-            <div class="hero">
-                <h1><i class="fas fa-shield-alt"></i> Secure Auth System</h1>
-                <p>Fast, secure, and modern authentication built with FastAPI</p>
-                
-                <div class="btn-group">
-                    <a href="/login" class="btn-primary">
-                        <i class="fas fa-sign-in-alt"></i> Login
-                    </a>
-                    <a href="/signup" class="btn-secondary">
-                        <i class="fas fa-user-plus"></i> Create Account
-                    </a>
+    <div class="card" style="padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem; justify-content: space-between;">
+        <div>
+            <p class="eyebrow">Featured story</p>
+            {% if featured_post %}
+                <h2 class="section-title" style="font-size: clamp(1.6rem, 2.4vw, 2.35rem); margin-bottom: 0.75rem;">{{ featured_post.title }}</h2>
+                <p class="muted" style="line-height: 1.8;">{{ featured_post.summary }}</p>
+                <div class="meta-row" style="margin-top: 1rem;">
+                    <span class="pill">By {{ featured_post.author }}</span>
+                    <span>{{ featured_post.created_at }}</span>
                 </div>
-            </div>
+            {% else %}
+                <div class="empty-state" style="margin-top: 0.5rem;">
+                    <h3 style="margin-top: 0;">No articles yet</h3>
+                    <p>Be the first to publish a story and turn this into a live blog.</p>
+                </div>
+            {% endif %}
         </div>
-    </main>
+        {% if featured_post %}
+            <a class="btn btn-primary" href="/article/{{ featured_post.id }}" style="align-self: flex-start;">Read Featured Article</a>
+        {% endif %}
+    </div>
+</section>
 
-    <footer>
-        <p>&copy; 2024 FastAPI Auth System. Built with <i class="fas fa-heart" style="color: #ff6b6b;"></i> using FastAPI</p>
-    </footer>
+<section style="margin-top: 2.5rem;">
+    <div style="display: flex; align-items: end; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem;">
+        <div>
+            <p class="eyebrow">Latest writing</p>
+            <h2 class="section-title">Fresh stories from your blog</h2>
+        </div>
+        <a class="btn btn-secondary" href="/articles">View all articles</a>
+    </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
+    {% if recent_posts %}
+        <div class="grid grid-3">
+            {% for post in recent_posts %}
+                <article class="story-card">
+                    <div class="meta-row">
+                        <span class="pill">By {{ post.author }}</span>
+                        <span>{{ post.created_at }}</span>
+                    </div>
+                    <h3 style="margin-top: 1rem; font-size: 1.4rem;">{{ post.title }}</h3>
+                    <p class="muted" style="line-height: 1.8; margin-top: 0.75rem;">{{ post.summary }}</p>
+                    <div style="margin-top: 1.1rem; display: flex; gap: 0.75rem; flex-wrap: wrap;">
+                        <a class="btn btn-primary" href="/article/{{ post.id }}">Read more</a>
+                        <a class="btn btn-secondary" href="/articles">Browse feed</a>
+                    </div>
+                </article>
+            {% endfor %}
+        </div>
+    {% elif featured_post %}
+        <div class="story-card">
+            <p class="muted">Only one article has been published so far. Check the featured story above.</p>
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <h3 style="margin-top: 0;">Your blog is waiting for its first story.</h3>
+            <p>Open the publish page and add a title, summary, and body to get started.</p>
+        </div>
+    {% endif %}
+</section>
+{% endblock %}
