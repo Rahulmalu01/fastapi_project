@@ -10,7 +10,7 @@
         <p class="muted" style="font-size: 1.08rem; line-height: 1.85; max-width: 54rem; margin-top: 1rem;">{{ article.summary }}</p>
 
         {% if article.image_url %}
-            <div style="margin-top:1.25rem;"><img src="{{ article.image_url }}" alt="cover" style="width:100%;border-radius:14px;object-fit:cover;max-height:360px;"/></div>
+            <div style="margin-top:1.25rem;"><img src="{{ article.image_url }}" alt="cover" style="width:100%;border-radius:14px;height:auto;object-fit:contain;"/></div>
         {% endif %}
 
         <div class="meta-row" style="margin-top: 1.4rem;">
