@@ -377,11 +377,10 @@ async def logout_r(request: Request):
 async def db_route(request: Request):
     users = fetch_users()
     posts = fetch_posts()
-    return templates.TemplateResponse(
+    return render_template(
+        request,
         "db_view.html",
         {
-            "request": request,
-            "user": get_current_user(request),
             "users": users,
             "posts": posts,
         },
