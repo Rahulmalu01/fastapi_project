@@ -1,11 +1,11 @@
 import os #to interact with environment variable (not necessary tbh)
 import sqlite3 #sqllite database
 import shutil #handle file uploads
-from datetime import datetime #date/timestamp for articles
+from datetime import datetime, timedelta #date/timestamp for articles
 from pathlib import Path #handle modern file path
 
 from fastapi import FastAPI, Form, Request, UploadFile, File #form - handle form data, Request - handle incoming request, UploadFile and File - handle file uploads
-from fastapi.responses import HTMLResponse, RedirectResponse #html response and redirect response for navigation
+from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse #html response and redirect response for navigation
 from fastapi.templating import Jinja2Templates #to render html templates with dynamic data
 from fastapi.staticfiles import StaticFiles #handle static files in our project (css in this case)
 from starlette.middleware.sessions import SessionMiddleware #handles user sessions for login/logout functionality
@@ -17,6 +17,99 @@ app = FastAPI()
 app.add_middleware(SessionMiddleware, secret_key=os.getenv("SECRET_KEY", "change-me")) #acts as a protection between routes, secret key - cookie sigining
 templates = Jinja2Templates(directory=str(BASE_DIR / "templates")) #render html templates from the templates directory
 app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="static") #mount static files (css, js, images) to the /static route
+
+# JWT configuration
+import jwt
+import uuid
+JWT_SECRET = os.getenv("JWT_SECRET", os.getenv("SECRET_KEY", "change-me"))
+JWT_ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "1440"))  # default 24 hours
+
+
+def create_access_token(data: dict, expires_delta: timedelta | None = None):
+    to_encode = data.copy()
+    expire = datetime.utcnow() + (expires_delta or timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
+    to_encode.update({"exp": expire})
+    encoded_jwt = jwt.encode(to_encode, JWT_SECRET, algorithm=JWT_ALGORITHM)
+    return encoded_jwt
+
+
+def decode_access_token(token: str):
+    try:
+        payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+        return payload
+    except Exception:
+        return None
+
+
+def create_session_record(jti: str, username: str, expires_at: datetime):
+    connection = get_db_connection()
+    cursor = connection.cursor()
+    cursor.execute(
+        "INSERT OR REPLACE INTO sessions (jti, username, created_at, expires_at, revoked) VALUES (?, ?, ?, ?, 0)",
+        (jti, username, datetime.utcnow().isoformat(), expires_at.isoformat()),
+    )
+    connection.commit()
+    connection.close()
+
+
+def is_session_valid(jti: str) -> bool:
+    if not jti:
+        return False
+    connection = get_db_connection()
+    cursor = connection.cursor()
+    cursor.execute("SELECT revoked, expires_at FROM sessions WHERE jti = ?", (jti,))
+    row = cursor.fetchone()
+    connection.close()
+    if not row:
+        return False
+    revoked = row[0]
+    expires_at = row[1]
+    try:
+        exp_dt = datetime.fromisoformat(expires_at)
+    except Exception:
+        return False
+    if revoked:
+        return False
+    if datetime.utcnow() > exp_dt:
+        return False
+    return True
+
+
+def revoke_session(jti: str):
+    if not jti:
+        return
+    connection = get_db_connection()
+    cursor = connection.cursor()
+    cursor.execute("UPDATE sessions SET revoked = 1 WHERE jti = ?", (jti,))
+    connection.commit()
+    connection.close()
+
+
+def get_current_user_from_token(request: Request):
+    auth = request.headers.get("authorization") or request.headers.get("Authorization")
+    if not auth:
+        return None
+    parts = auth.split()
+    if len(parts) != 2 or parts[0].lower() != "bearer":
+        return None
+    token = parts[1]
+    payload = decode_access_token(token)
+    if not payload:
+        return None
+    # ensure session (jti) exists and is valid
+    jti = payload.get("jti")
+    if not is_session_valid(jti):
+        return None
+    username = payload.get("sub") or payload.get("username")
+    if not username:
+        return None
+    connection = get_db_connection()
+    cursor = connection.cursor()
+    cursor.execute("SELECT id, username FROM users WHERE username = ?", (username,))
+    user = cursor.fetchone()
+    connection.close()
+    return dict(user) if user else None
 
 
 def get_db_connection():
@@ -56,6 +149,18 @@ def init_db():
     except Exception:
         # column probably already exists
         pass
+    # sessions table for stateful JWT session management
+    cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS sessions (
+            jti TEXT PRIMARY KEY,
+            username TEXT NOT NULL,
+            created_at TEXT NOT NULL,
+            expires_at TEXT NOT NULL,
+            revoked INTEGER DEFAULT 0
+        )
+        """
+    )
     connection.commit()
     connection.close()
 
@@ -139,6 +244,14 @@ def get_current_user(request: Request):
     user = cursor.fetchone()
     connection.close()
     return dict(user) if user else None
+
+
+def get_current_user_combined(request: Request):
+    """Try session-based user first, then fall back to token-based auth."""
+    user = get_current_user(request)
+    if user:
+        return user
+    return get_current_user_from_token(request)
 
 
 def fetch_users():
@@ -253,6 +366,45 @@ async def signup(request: Request, username: str = Form(...), password: str = Fo
     return RedirectResponse(url="/", status_code=303)
 
 
+@app.post("/token")
+async def token_endpoint(request: Request, username: str = Form(...), password: str = Form(...)):
+    # simple token issuance endpoint (form-data). Returns JSON with access_token
+    connection = get_db_connection()
+    cursor = connection.cursor()
+    cursor.execute("SELECT * FROM users WHERE username = ?", (username,))
+    user = cursor.fetchone()
+    connection.close()
+
+    if not user or user["password"] != password:
+        return JSONResponse({"error": "invalid_credentials"}, status_code=401)
+
+    # create jti and persist session
+    jti = str(uuid.uuid4())
+    expires_at = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    create_session_record(jti, user["username"], expires_at)
+    token = create_access_token({"sub": user["username"], "username": user["username"], "jti": jti}, expires_delta=timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
+    return {"access_token": token, "token_type": "bearer", "expires_at": expires_at.isoformat()}
+
+
+@app.post("/token/revoke")
+async def revoke_token(request: Request):
+    auth = request.headers.get("authorization") or request.headers.get("Authorization")
+    if not auth:
+        return JSONResponse({"error": "missing_authorization"}, status_code=400)
+    parts = auth.split()
+    if len(parts) != 2 or parts[0].lower() != "bearer":
+        return JSONResponse({"error": "invalid_authorization"}, status_code=400)
+    token = parts[1]
+    payload = decode_access_token(token)
+    if not payload:
+        return JSONResponse({"error": "invalid_token"}, status_code=401)
+    jti = payload.get("jti")
+    if not jti:
+        return JSONResponse({"error": "missing_jti"}, status_code=400)
+    revoke_session(jti)
+    return JSONResponse({"revoked": True})
+
+
 @app.get("/publish", response_class=HTMLResponse)
 @app.get("/new", response_class=HTMLResponse)
 async def publish_form(request: Request):
@@ -271,7 +423,7 @@ async def publish_article(
     body: str = Form(...),
     image: UploadFile | None = File(None),
 ):
-    user = get_current_user(request)
+    user = get_current_user_combined(request)
     if not user:
         return RedirectResponse(url="/signin?next=/publish", status_code=303)
 
@@ -325,7 +477,7 @@ async def articles(request: Request):
 
 @app.get("/article/{post_id}/edit", response_class=HTMLResponse)
 async def edit_article_form(request: Request, post_id: int):
-    user = get_current_user(request)
+    user = get_current_user_combined(request)
     if not user:
         return RedirectResponse(url=f"/signin?next=/article/{post_id}/edit", status_code=303)
 
@@ -342,7 +494,7 @@ async def edit_article_form(request: Request, post_id: int):
 
 @app.post("/article/{post_id}/edit", response_class=HTMLResponse)
 async def edit_article(request: Request, post_id: int, title: str = Form(...), summary: str = Form(""), body: str = Form(...), image: UploadFile | None = File(None)):
-    user = get_current_user(request)
+    user = get_current_user_combined(request)
     if not user:
         return RedirectResponse(url=f"/signin?next=/article/{post_id}/edit", status_code=303)
 
