@@ -3,3 +3,4 @@ uvicorn
 jinja2
 python-multipart
 itsdangerous
+PyJWT>=2.8.0
